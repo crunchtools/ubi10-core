@@ -37,10 +37,13 @@ fi
 echo "=== Masked Services ==="
 
 for svc in systemd-remount-fs systemd-update-done systemd-udev-trigger; do
-    if systemctl is-enabled "$svc" 2>/dev/null | grep -q "masked"; then
+    ENABLED_STATE=$(systemctl is-enabled "${svc}.service" 2>/dev/null || true)
+    UNIT_FILE=$(systemctl show -p FragmentPath "${svc}.service" 2>/dev/null | cut -d= -f2 || true)
+    if [ "$ENABLED_STATE" = "masked" ] || [ "$UNIT_FILE" = "/dev/null" ] || \
+       readlink -f "/etc/systemd/system/${svc}.service" 2>/dev/null | grep -q "/dev/null"; then
         pass "service masked: $svc"
     else
-        fail "service not masked: $svc"
+        fail "service not masked: $svc (is-enabled=$ENABLED_STATE, unit=$UNIT_FILE)"
     fi
 done
 
