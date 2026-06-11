@@ -134,7 +134,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CRUNCHTOOLS_DISPATCH_TOKEN }}
         run: |
-          for repo in ubi10-httpd factory postiz zabbix-agent rotv immich image-server; do
+          for repo in ubi10-httpd factory postiz zabbix-agent rotv immich image-server acquacotta; do
             gh api repos/crunchtools/$repo/dispatches \
               -f event_type=parent-image-updated || true
           done
