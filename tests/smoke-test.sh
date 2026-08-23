@@ -50,7 +50,7 @@ done
 # ---------- Tool Binaries ----------
 echo "=== Tool Binaries ==="
 
-for bin in ping dig netstat less crontab ps diff; do
+for bin in ping dig netstat less crontab ps diff rsyslogd; do
     if command -v "$bin" >/dev/null 2>&1; then
         pass "binary exists: $bin"
     else
@@ -69,6 +69,7 @@ PACKAGES=(
     cronie
     procps-ng
     diffutils
+    rsyslog
 )
 
 for pkg in "${PACKAGES[@]}"; do
@@ -78,6 +79,58 @@ for pkg in "${PACKAGES[@]}"; do
         fail "package missing: $pkg"
     fi
 done
+
+# ---------- Central Log Forwarding (constitution XIII) ----------
+echo "=== Central Log Forwarding ==="
+
+# The forwarding config is the whole point of shipping rsyslog here. Without it
+# a systemd container's internal journal never reaches the collector, and the
+# loss is silent — the container looks healthy the entire time.
+if [ -f /etc/rsyslog.d/00-crunchtools-forward.conf ]; then
+    pass "forwarding config present"
+else
+    fail "forwarding config missing: /etc/rsyslog.d/00-crunchtools-forward.conf"
+fi
+
+if grep -q 'omfwd' /etc/rsyslog.d/00-crunchtools-forward.conf 2>/dev/null; then
+    pass "forwarding config declares omfwd action"
+else
+    fail "forwarding config does not forward anywhere"
+fi
+
+# The drop-in must NOT re-declare imjournal or workDirectory: the stock
+# /etc/rsyslog.conf already sets both, and rsyslog rejects the entire
+# configuration on a duplicate, which would leave the container with no
+# logging at all.
+if grep -vE '^[[:space:]]*#' /etc/rsyslog.d/00-crunchtools-forward.conf 2>/dev/null \
+     | grep -qE 'module\(load="imjournal|workDirectory'; then
+    fail "forwarding config re-declares imjournal/workDirectory (duplicate breaks all logging)"
+else
+    pass "forwarding config does not duplicate stock module/global declarations"
+fi
+
+# A config that rsyslog cannot parse would leave the service dead on arrival.
+if rsyslogd -N1 >/dev/null 2>&1; then
+    pass "rsyslog config validates"
+else
+    fail "rsyslog config failed validation (rsyslogd -N1)"
+fi
+
+ENABLED=$(systemctl is-enabled rsyslog.service 2>/dev/null || true)
+if [ "$ENABLED" = "enabled" ]; then
+    pass "rsyslog enabled at boot"
+else
+    fail "rsyslog not enabled at boot (is-enabled=$ENABLED)"
+fi
+
+# Host-level Restart=always only restarts the container; a service that dies
+# inside a still-running container needs its own drop-in (container-image
+# profile III.5).
+if [ -f /etc/systemd/system/rsyslog.service.d/restart.conf ]; then
+    pass "rsyslog self-heal drop-in present"
+else
+    fail "rsyslog self-heal drop-in missing"
+fi
 
 # ---------- Summary ----------
 echo ""
