@@ -74,8 +74,14 @@ jobs:
 
       - name: Start container
         run: |
+          # --cap-add=SETPCAP is required for rsyslog. It drops POSIX capabilities
+          # at startup, which needs CAP_SETPCAP; the rootless podman on the CI
+          # runner does not grant it by default and rsyslogd then fails with
+          # "capng_apply=-4". Rootful podman on lotor has it, so without this the
+          # harness is strictly weaker than production and fails a good config.
           podman run -d --name test-container \
             --systemd=always \
+            --cap-add=SETPCAP \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Wait for systemd
