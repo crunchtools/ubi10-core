@@ -110,10 +110,16 @@ else
 fi
 
 # A config that rsyslog cannot parse would leave the service dead on arrival.
-if rsyslogd -N1 >/dev/null 2>&1; then
+# Capture the output rather than discarding it: a bare pass/fail here tells you
+# nothing when this trips only on a different runtime (rootless CI vs rootful
+# host), and that is precisely when you need the message.
+RSYSLOG_VALIDATION=$(rsyslogd -N1 2>&1)
+RSYSLOG_RC=$?
+if [ "$RSYSLOG_RC" -eq 0 ]; then
     pass "rsyslog config validates"
 else
-    fail "rsyslog config failed validation (rsyslogd -N1)"
+    fail "rsyslog config failed validation (rsyslogd -N1, rc=$RSYSLOG_RC)"
+    echo "$RSYSLOG_VALIDATION" | sed 's/^/        /'
 fi
 
 ENABLED=$(systemctl is-enabled rsyslog.service 2>/dev/null || true)
