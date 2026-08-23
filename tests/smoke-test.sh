@@ -115,8 +115,22 @@ fi
 # host), and that is precisely when you need the message.
 RSYSLOG_VALIDATION=$(rsyslogd -N1 2>&1)
 RSYSLOG_RC=$?
-if [ "$RSYSLOG_RC" -eq 0 ]; then
+
+# Genuine configuration faults, checked for explicitly so that the environment
+# carve-out below can never mask one. A duplicate module declaration lands here.
+if echo "$RSYSLOG_VALIDATION" | grep -qE "error during parsing|not known|cannot be added|already in this config"; then
+    fail "rsyslog config is invalid"
+    echo "$RSYSLOG_VALIDATION" | sed 's/^/        /'
+elif [ "$RSYSLOG_RC" -eq 0 ]; then
     pass "rsyslog config validates"
+elif echo "$RSYSLOG_VALIDATION" | grep -q "capng_apply"; then
+    # rsyslogd drops POSIX capabilities at startup, which needs CAP_SETPCAP in
+    # the INITIAL user namespace. A rootless container cannot grant that, and
+    # --cap-add does not help: the bounding set is simply not writable from
+    # inside a userns. This is the CI runner's constraint, not a config problem
+    # -- lotor runs rootful podman, where it works. Skipped rather than failed,
+    # and only after the parse-error check above has had its say.
+    echo "  SKIP: rsyslog config validation (rootless: $(echo "$RSYSLOG_VALIDATION" | grep -o 'capng_apply=-[0-9]*'))"
 else
     fail "rsyslog config failed validation (rsyslogd -N1, rc=$RSYSLOG_RC)"
     echo "$RSYSLOG_VALIDATION" | sed 's/^/        /'
