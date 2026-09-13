@@ -3,6 +3,8 @@ name: Build, Test, and Push Container Image
 on:
   push:
     branches: [main, master]
+  schedule:
+    - cron: '0 4 * * 0'  # Sunday midnight ET (4am UTC) - cascade root, runs before downstream
   repository_dispatch:
     types: [parent-image-updated]
   workflow_dispatch:
