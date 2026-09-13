@@ -3,8 +3,6 @@ name: Build, Test, and Push Container Image
 on:
   push:
     branches: [main, master]
-  schedule:
-    - cron: '0 5 * * 0'  # Sunday 1am ET (5am UTC)
   repository_dispatch:
     types: [parent-image-updated]
   workflow_dispatch:
