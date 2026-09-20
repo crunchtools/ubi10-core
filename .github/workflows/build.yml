@@ -3,6 +3,7 @@ name: Build, Test, and Push Container Image
 on:
   push:
     branches: [main, master]
+    tags: ["v*"]
   repository_dispatch:
     types: [parent-image-updated]
   workflow_dispatch:
@@ -130,6 +131,12 @@ jobs:
           docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest "$SHA_TAG" || true
           docker push "$SHA_TAG" || true
 
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:"$VERSION"
+            docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:"$VERSION"
+          fi
+
       - name: Trigger downstream rebuilds
         env:
           GH_TOKEN: ${{ secrets.CRUNCHTOOLS_DISPATCH_TOKEN }}
@@ -197,3 +204,9 @@ jobs:
           docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest ${{ env.GHCR_IMAGE }}:"$SHA_TAG"
           docker push ${{ env.GHCR_IMAGE }}:latest
           docker push ${{ env.GHCR_IMAGE }}:"$SHA_TAG"
+
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest ${{ env.GHCR_IMAGE }}:"$VERSION"
+            docker push ${{ env.GHCR_IMAGE }}:"$VERSION"
+          fi
