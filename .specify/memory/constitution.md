@@ -1,9 +1,9 @@
 # ubi10-core Constitution
 
-> **Version:** 1.0.0
+> **Version:** 1.0.1
 > **Ratified:** 2026-03-10
 > **Status:** Active
-> **Inherits:** [crunchtools/constitution](https://github.com/crunchtools/constitution) v1.0.0
+> **Inherits:** [crunchtools/constitution](https://github.com/crunchtools/constitution) v1.17.0
 > **Profile:** Container Image
 
 UBI 10 core base image providing troubleshooting tools, cron, and systemd hardening. Foundation layer for all CrunchTools container images.
