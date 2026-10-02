@@ -1,62 +1,62 @@
 # ubi10-core Constitution
 
-> **Version:** 1.0.1
+> **Version:** 1.1.0
 > **Ratified:** 2026-03-10
+> **Amended:** 2026-10-02
 > **Status:** Active
-> **Inherits:** [crunchtools/constitution](https://github.com/crunchtools/constitution) v1.17.0
+> **Inherits:** [crunchtools/constitution](https://github.com/crunchtools/constitution) v1.18.0
 > **Profile:** Container Image
 
-UBI 10 core base image providing troubleshooting tools, cron, and systemd hardening. Foundation layer for all CrunchTools container images.
+This file holds what is specific to ubi10-core. The fleet rules and the Container
+Image profile (license, versioning, LABELs, the RHSM secret-mount pattern,
+systemd conventions, registry, testing and quality gates) apply at the
+inherited version and are checked against this repo's files by
+`constitution.yml`. They are not restated here.
 
----
+## Purpose
 
-## License
+Tier 0 of the layered UBI 10 image tree: troubleshooting tools, cron, central
+log forwarding and systemd hardening. Every systemd-based crunchtools image
+builds on it, directly or through ubi10-httpd. Published as
+`quay.io/crunchtools/ubi10-core`.
 
-AGPL-3.0-or-later
+## Parent Image
 
-## Versioning
+`registry.access.redhat.com/ubi10/ubi-init:latest`, so services run under
+systemd. Every package comes from the UBI repos; no RHSM registration.
 
-Follow Semantic Versioning 2.0.0. MAJOR/MINOR/PATCH.
+## Packages and Services
 
-## Base Image
+- **Packages:** iputils, bind-utils, net-tools, less, cronie, procps-ng,
+  diffutils, rsyslog.
+- **Masked:** systemd-remount-fs, systemd-update-done, systemd-udev-trigger.
+- **Enabled:** rsyslog, with a `Restart=on-failure` drop-in
+  (`config/rsyslog-restart.conf`).
 
-`registry.access.redhat.com/ubi10/ubi-init:latest` — systemd-based for multi-service containers.
+## Central Log Forwarding
 
-## Registry
+`config/rsyslog-forward.conf` forwards the container's internal journal to the
+central collector over TCP 514 at the podman bridge gateway, with a
+disk-assisted queue (64 MB cap, saved on shutdown) so a collector restart
+backs logs up instead of dropping them. It lives here so every image built on
+this base gets constitution XIII forwarding without opting in.
 
-Published to `quay.io/crunchtools/ubi10-core`.
+## Smoke Test Coverage
 
-## RHSM Registration
-
-Not required. All packages are available in UBI repos.
-
-## Containerfile Conventions
-
-- Uses `Containerfile` (not Dockerfile)
-- Required LABELs: `maintainer`, `description`
-- `dnf install -y` followed by `dnf clean all`
-- No RHSM registration needed
-- systemd services masked: systemd-remount-fs, systemd-update-done, systemd-udev-trigger
-- `STOPSIGNAL SIGRTMIN+3` for proper systemd shutdown
-- `ENTRYPOINT ["/sbin/init"]`
-
-## Packages Installed
-
-iputils, bind-utils, net-tools, less, cronie, procps-ng, diffutils
-
-## Testing
-
-- **Build test**: CI builds the image on every push to main/master
-- **Smoke tests**: systemd boot, masked services (3), tool binaries (ping, dig, netstat, less, crontab, ps, diff), package integrity (7 packages)
-- **Security scan**: Recommended (not yet implemented)
-
-## Quality Gates
-
-1. Build — CI builds the Containerfile successfully
-2. Test — smoke tests pass (systemd boots, services masked, tools present, packages verified)
-3. Push — image published only after tests pass
-4. Weekly rebuild — cron job picks up base image updates every Monday 4:00 AM UTC
+`tests/smoke-test.sh` asserts systemd boots, the three services above are
+masked, the tool binaries (ping, dig, netstat, less, crontab, ps, diff) are
+present, the packages are installed, and the rsyslog forwarding config is in
+place and parses.
 
 ## Downstream Images
 
-ubi10-httpd (direct child). Changes to this image cascade to all CrunchTools container images via repository_dispatch.
+Build dispatches `parent-image-updated` to ubi10-httpd, factory, postiz, rotv,
+immich and acquacotta.
+
+## History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2026-03-10 | Initial constitution, tier 0 of the layered image tree |
+| 1.0.1 | 2026-09-25 | Gatehouse review, triage and pre-commit gates |
+| 1.1.0 | 2026-10-02 | Manifest under constitution v1.18.0: profile restatement removed, image specifics kept |
