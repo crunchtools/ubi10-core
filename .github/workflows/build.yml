@@ -61,7 +61,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download image artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: container-image
           path: /tmp
@@ -109,7 +109,7 @@ jobs:
       contents: read
     steps:
       - name: Download image artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: container-image
           path: /tmp
@@ -168,7 +168,7 @@ jobs:
       # so Quay and GHCR carry the identical image rather than two builds that
       # merely started from the same commit.
       - name: Download image artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: container-image
           path: /tmp
