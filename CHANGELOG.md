@@ -6,6 +6,10 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Removed
+- `factory` from the `parent-image-updated` dispatch list: factory.crunchtools.com
+  is decommissioned.
+
 ### Changed
 - Constitution is now a v1.18.0 manifest: fleet and profile rules apply by
   reference, and only this repo's specifics are kept.

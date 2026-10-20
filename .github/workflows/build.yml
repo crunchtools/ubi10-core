@@ -151,7 +151,7 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.ci-token.outputs.token }}
         run: |
-          for repo in ubi10-httpd factory postiz rotv immich acquacotta; do
+          for repo in ubi10-httpd postiz rotv immich acquacotta; do
             gh api repos/crunchtools/$repo/dispatches \
               -f event_type=parent-image-updated || true
           done

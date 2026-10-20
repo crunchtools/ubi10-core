@@ -50,7 +50,7 @@ place and parses.
 
 ## Downstream Images
 
-Build dispatches `parent-image-updated` to ubi10-httpd, factory, postiz, rotv,
+Build dispatches `parent-image-updated` to ubi10-httpd, postiz, rotv,
 immich and acquacotta.
 
 ## History
