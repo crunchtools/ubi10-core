@@ -7,6 +7,9 @@ on:
   repository_dispatch:
     types: [parent-image-updated]
   workflow_dispatch:
+  # Weekly root rebuild; parent-image-updated cascades it down the ubi10 chain.
+  schedule:
+    - cron: '0 6 * * 1'
 env:
   REGISTRY: quay.io
   IMAGE_NAME: crunchtools/ubi10-core
@@ -42,6 +45,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # Non-commit rebuilds exist to pick up errata; a cached dnf layer ships none.
+          no-cache: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
 
       - name: Save image as tarball
         run: docker save ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest -o /tmp/image.tar
