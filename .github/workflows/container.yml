@@ -1,0 +1,40 @@
+# Container release: build once per change, gate the digest, promote what was
+# tested (constitution III and Container Image VII). Quay.io only.
+#
+# ubi10-core is the root of the ubi10 cascade: it cuts no release, so
+# `cascade: true` moves :latest with :main, and every promotion dispatches
+# parent-image-updated to the images that build FROM it.
+
+name: Container
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  repository_dispatch:
+    types: [parent-image-updated]
+  # Weekly root rebuild; parent-image-updated cascades it down the ubi10 chain.
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  container:
+    uses: crunchtools/constitution/.github/workflows/container-release.yml@c50e48f8a6502674a66c412977be3c9e69ca4a8c
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      image: quay.io/crunchtools/ubi10-core
+      boot: systemd
+      contract-test: tests/gate.sh
+      cascade: true
+      downstream: ubi10-httpd postiz rotv immich acquacotta
+      constitution-ref: c50e48f8a6502674a66c412977be3c9e69ca4a8c
+    secrets:
+      QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
+      QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
+      CRUNCHTOOLS_CI_APP_KEY: ${{ secrets.CRUNCHTOOLS_CI_APP_KEY }}
