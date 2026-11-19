@@ -11,6 +11,7 @@ All notable changes to this project are documented here. The format follows
   is decommissioned.
 
 ### Changed
+- Gatehouse triage now receives `review_result`, so a PR whose review job died before posting is held instead of passing.
 - Constitution is now a v1.18.0 manifest: fleet and profile rules apply by
   reference, and only this repo's specifics are kept.
 - Constitution validation is pinned via `constitution.yml`.
