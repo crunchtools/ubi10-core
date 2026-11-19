@@ -15,6 +15,10 @@ All notable changes to this project are documented here. The format follows
   reference, and only this repo's specifics are kept.
 - Constitution validation is pinned via `constitution.yml`.
 - Dependabot auto-merges GitHub Actions minor and patch updates.
+- The container release runs constitution v1.51.0's `container-release.yml`
+  (was v1.46.0) and grants it `issues: write`, so a failed scheduled rebuild
+  opens an issue instead of only warning. A `v*` promote now also refuses an
+  image whose `version` label names a different release of this repo.
 
 ## [1.0.0] - 2026-09-20
 
