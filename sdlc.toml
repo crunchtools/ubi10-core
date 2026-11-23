@@ -1,0 +1,6 @@
+[tool.sdlc.image]
+# Written by crunchtools/sdlc's scripts/convert_repo.py: moved from the workflows.
+image = "quay.io/crunchtools/ubi10-core"
+boot = "systemd"
+contract-test = "tests/gate.sh"
+cascade = true
