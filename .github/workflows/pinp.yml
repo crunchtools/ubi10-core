@@ -15,7 +15,7 @@ jobs:
       options: --device /dev/fuse --security-opt seccomp=unconfined --security-opt apparmor=unconfined --security-opt label=disable
     steps:
       - run: |
-          printf 'podman:1:999\npodman:1001:32768\n' > /etc/subuid
+          printf 'podman:1:999\npodman:1001:64535\n' > /etc/subuid
           cp /etc/subuid /etc/subgid
           cat /proc/self/uid_map; uname -r
       - run: runuser -u podman -- env HOME=/home/podman podman info --format '{{.Store.GraphDriverName}} rootless={{.Host.Security.Rootless}}'
