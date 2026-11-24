@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, crunchtools-uncached]
+        runner: [crunchtools-uncached]
         opts:
           - "--user podman --device /dev/fuse --security-opt seccomp=unconfined --security-opt apparmor=unconfined --security-opt label=disable"
           - "--user podman --device /dev/fuse --security-opt label=disable"
@@ -18,7 +18,7 @@ jobs:
       image: quay.io/podman/stable:v5.6
       options: ${{ matrix.opts }}
     steps:
-      - run: id; uname -r; cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null || true
+      - run: cat /proc/self/uid_map /proc/self/gid_map /etc/subuid; id; uname -r; cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null || true
       - run: podman info --format '{{.Store.GraphDriverName}} {{.Host.Security.Rootless}} {{.Host.IDMappings.UIDMap}}'
       - run: podman run --rm docker.io/library/busybox:latest echo nested-run-ok
       - run: |
