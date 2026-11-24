@@ -13,6 +13,7 @@ jobs:
           - "--user podman --device /dev/fuse --security-opt seccomp=unconfined --security-opt apparmor=unconfined --security-opt label=disable"
           - "--user podman --device /dev/fuse --security-opt label=disable"
     runs-on: ${{ matrix.runner }}
+    env: { HOME: /home/podman }
     container:
       image: quay.io/podman/stable:v5.6
       options: ${{ matrix.opts }}
