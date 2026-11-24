@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, crunchtools-uncached]
+        runner: [crunchtools-vmspike]
     runs-on: ${{ matrix.runner }}
     container:
       image: quay.io/podman/stable:v5.6
