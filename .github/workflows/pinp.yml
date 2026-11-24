@@ -8,19 +8,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [crunchtools-uncached]
-        opts:
-          - "--user podman --device /dev/fuse --security-opt seccomp=unconfined --security-opt apparmor=unconfined --security-opt label=disable"
-          - "--user podman --device /dev/fuse --security-opt label=disable"
+        runner: [ubuntu-latest, crunchtools-uncached]
     runs-on: ${{ matrix.runner }}
-    env: { HOME: /home/podman }
     container:
       image: quay.io/podman/stable:v5.6
-      options: ${{ matrix.opts }}
+      options: --device /dev/fuse --security-opt seccomp=unconfined --security-opt apparmor=unconfined --security-opt label=disable
     steps:
-      - run: cat /proc/self/uid_map /proc/self/gid_map /etc/subuid; id; uname -r; cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null || true
-      - run: podman info --format '{{.Store.GraphDriverName}} {{.Host.Security.Rootless}} {{.Host.IDMappings.UIDMap}}'
-      - run: podman run --rm docker.io/library/busybox:latest echo nested-run-ok
       - run: |
-          d=$(mktemp -d); printf 'FROM docker.io/library/busybox:latest\nRUN echo built > /x\n' > $d/Containerfile
-          podman build -q -t spike $d && podman run --rm spike cat /x
+          printf 'podman:1:999\npodman:1001:32768\n' > /etc/subuid
+          cp /etc/subuid /etc/subgid
+          cat /proc/self/uid_map; uname -r
+      - run: runuser -u podman -- env HOME=/home/podman podman info --format '{{.Store.GraphDriverName}} rootless={{.Host.Security.Rootless}}'
+      - run: runuser -u podman -- env HOME=/home/podman podman run --rm docker.io/library/busybox:latest echo nested-run-ok
+      - run: |
+          d=$(mktemp -d); chmod 755 $d; printf 'FROM docker.io/library/busybox:latest\nRUN echo built > /x\n' > $d/Containerfile
+          runuser -u podman -- env HOME=/home/podman sh -c "podman build -q -t spike $d && podman run --rm spike cat /x"
