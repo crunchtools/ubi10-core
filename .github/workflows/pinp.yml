@@ -1,0 +1,25 @@
+# SANDBOX (sdlc#135): can rootless podman run nested in a job container? Temporary.
+name: pinp-spike
+on:
+  push: { branches: [sandbox/pinp] }
+permissions: { contents: read }
+jobs:
+  spike:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, crunchtools-uncached]
+        opts:
+          - "--user podman --device /dev/fuse --security-opt seccomp=unconfined --security-opt apparmor=unconfined --security-opt label=disable"
+          - "--user podman --device /dev/fuse --security-opt label=disable"
+    runs-on: ${{ matrix.runner }}
+    container:
+      image: quay.io/podman/stable:v5.6
+      options: ${{ matrix.opts }}
+    steps:
+      - run: id; uname -r; cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null || true
+      - run: podman info --format '{{.Store.GraphDriverName}} {{.Host.Security.Rootless}} {{.Host.IDMappings.UIDMap}}'
+      - run: podman run --rm docker.io/library/busybox:latest echo nested-run-ok
+      - run: |
+          d=$(mktemp -d); printf 'FROM docker.io/library/busybox:latest\nRUN echo built > /x\n' > $d/Containerfile
+          podman build -q -t spike $d && podman run --rm spike cat /x
