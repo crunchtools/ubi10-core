@@ -1,2 +1,20 @@
 [tool.sdlc]
 repo-kinds = ["container-image"]
+
+[tool.sdlc.image]
+# Written by crunchtools/sdlc's scripts/convert_repo.py: moved from the workflows.
+image = "quay.io/crunchtools/ubi10-core"
+boot = "systemd"
+
+[tool.sdlc.ci]
+checks = ["contract"]
+
+# The contract test: boot the image this run built under systemd and run the
+# smoke tests inside it. sdlc's image job does not run contract-test
+# (crunchtools/sdlc#118), so it is a check that does.
+[tool.sdlc.ci.contract]
+kind = "command"
+systemd = true
+image = "localhost/ubi10-core:sdlc"
+ready = ["bash", "tests/systemd-ready.sh"]
+argv = ["bash", "tests/smoke-test.sh"]
