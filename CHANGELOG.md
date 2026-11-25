@@ -6,11 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-### Removed
-- `factory` from the `parent-image-updated` dispatch list: factory.crunchtools.com
-  is decommissioned.
+## [1.1.0] - 2026-11-25
 
 ### Changed
+- CI is the fleet ci.yml (sdlc 0.15): one image build per release, signed with
+  the fleet key and annotated with this repo, so children can verify their parent.
+- `factory` is no longer in the `parent-image-updated` dispatch list:
+  factory.crunchtools.com is decommissioned.
 - Gatehouse triage now receives `review_result`, so a PR whose review job died before posting is held instead of passing.
 - Constitution is now a v1.18.0 manifest: fleet and profile rules apply by
   reference, and only this repo's specifics are kept.
